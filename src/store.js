@@ -61,7 +61,7 @@ export class Store {
   }
 
   getState () {
-    return this._vm.state
+    return this._vm._data.state
   }
 
   commit (_type, _payload, _options) {
@@ -84,12 +84,6 @@ export class Store {
       })
     })
     this._subscribers.forEach(sub => sub(mutation, this.state))
-
-    if (options && options.silent) {
-      console.warn(
-        `[avalonx] mutation type: ${type}. Silent option has been removed. `
-      )
-    }
   }
 
   dispatch (_type, _payload) {
@@ -129,7 +123,9 @@ export class Store {
 
   replaceState (state) {
     this._withCommit(() => {
-      this._vm.state = state
+      let _data = this._vm._data
+      _data.state = state
+      this.state = _data.state
     })
   }
 
@@ -198,9 +194,11 @@ function resetStoreVM (store, state, hot) {
   // 设置新的storeVm
   store._vm = avalon.define({
     $id: avalon.makeHashCode('store'),
-    state: state
+    _data: {
+      state: state
+    }
   })
-  store.state = store._vm.state
+  store.state = store._vm._data.state
 
   // enable strict mode for new vm
   if (store.strict) {
@@ -212,7 +210,7 @@ function resetStoreVM (store, state, hot) {
       // dispatch changes in all subscribed watchers
       // to force getter re-evaluation for hot reloading.
       store._withCommit(() => {
-        oldVm.state = null
+        oldVm._data.state = null
       })
     }
     setTimeout(()=>{
@@ -226,7 +224,7 @@ function installModule (store, rootState, path, module, hot) {
   const namespace = store._modules.getNamespace(path)
 
   // register in namespace map
-  if (namespace) {
+  if (module.getNamespaced()) {
     store._modulesNamespaceMap[namespace] = module
   }
 
@@ -314,29 +312,30 @@ function makeLocalContext (store, namespace, path) {
   return local
 }
 
-let lastGettersKey = ''
 function makeLocalGetters (store, namespace) {
   const gettersProxy = {}
 
   const splitPos = namespace.length
-  Object.keys(store.getters).forEach(type => {
+
+  if(!store._gettersTypes){
+    store._gettersTypes = Object.keys(store._wrappedGetters)
+  }
+  while(store._gettersTypes && store._gettersTypes.length){
+    let type = store._gettersTypes.pop()
     // skip if the target getter is not match this namespace
     if (type.slice(0, splitPos) !== namespace) return
-    // 防止递归调用造成死循环
-    if (lastGettersKey && lastGettersKey === type) {
-      lastGettersKey = ''
-      return
-    }
-    lastGettersKey = type
+
     // extract local getter type
     const localType = type.slice(splitPos)
 
     // Add a port to the getters proxy.
     // Define as getter property because
     // we do not want to evaluate the getters in this time.
-    gettersProxy[localType] = store.getters[type]// 这里会再次调用_wrappedGetters
-  })
-
+    gettersProxy[localType] = store._wrappedGetters[type](store, true)// 这里会再次调用_wrappedGetters,防止递归
+  }
+  if(store._gettersTypes && !store._gettersTypes.length){
+    delete store._gettersTypes
+  }
   return gettersProxy
 }
 
@@ -376,11 +375,11 @@ function registerGetter (store, type, rawGetter, local) {
     return
   }
   // 存储封装过的getters处理函数
-  store._wrappedGetters[type] = function wrappedGetter (store) {
+  store._wrappedGetters[type] = function wrappedGetter (store, isLocal) {
     // 为原getters传入对应状态
     return rawGetter(
       local.getState(), // local state
-      local.getters(), // local getters
+      isLocal ? {} : local.getters(), // local getters
       store.getState(), // root state
       store.getters // root getters
     )
