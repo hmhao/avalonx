@@ -181,28 +181,26 @@ function resetStore (store, hot) {
 function resetStoreVM (store, state, hot) {
   const oldVm = store._vm // 缓存前vm组件
 
-  // bind store public getters
-  store.getters = {}
   const wrappedGetters = store._wrappedGetters
   const computed = {}
-  const keys = []
   // 循环所有处理过的getters，并新建computed对象进行存储
   forEachValue(wrappedGetters, (fn, key) => {
     // use computed to leverage its lazy-caching mechanism
     computed[key] = () => fn(store)
-    keys.push(key)
   })
-
-  // 设置新的storeVm，将当前初始化的state以及getters作为computed属性（刚刚遍历生成的）
-  store._vm = avalon.define({
-    $id: avalon.makeHashCode('store'),
-    state: state,
+  // bind store public getters
+  // 为getters对象建立属性，使得我们通过avalon.store.getters.xxxgetter能够访问到该getters
+  store.getters = avalon.define({
+    $id: avalon.makeHashCode('getters'),
     $computed: computed
   })
-  // 为getters对象建立属性，使得我们通过avalon.store.getters.xxxgetter能够访问到该getters
-  avalon.each(keys, (i, key) => {
-    store.getters[key] = store._vm[key]
+
+  // 设置新的storeVm
+  store._vm = avalon.define({
+    $id: avalon.makeHashCode('store'),
+    state: state
   })
+  store.state = store._vm.state
 
   // enable strict mode for new vm
   if (store.strict) {
@@ -228,7 +226,7 @@ function installModule (store, rootState, path, module, hot) {
   const namespace = store._modules.getNamespace(path)
 
   // register in namespace map
-  if (module.namespaced) {
+  if (namespace) {
     store._modulesNamespaceMap[namespace] = module
   }
 
@@ -309,13 +307,14 @@ function makeLocalContext (store, namespace, path) {
   // getters and state object must be gotten lazily
   // because they will be changed by vm update
   local.getters = noNamespace
-    ? store.getters
-    : makeLocalGetters(store, namespace)
+    ? () => store.getters
+    : () => makeLocalGetters(store, namespace)
 
   local.getState = () => getNestedState(store.getState(), path)
   return local
 }
 
+let lastGettersKey = ''
 function makeLocalGetters (store, namespace) {
   const gettersProxy = {}
 
@@ -323,14 +322,19 @@ function makeLocalGetters (store, namespace) {
   Object.keys(store.getters).forEach(type => {
     // skip if the target getter is not match this namespace
     if (type.slice(0, splitPos) !== namespace) return
-
+    // 防止递归调用造成死循环
+    if (lastGettersKey && lastGettersKey === type) {
+      lastGettersKey = ''
+      return
+    }
+    lastGettersKey = type
     // extract local getter type
     const localType = type.slice(splitPos)
 
     // Add a port to the getters proxy.
     // Define as getter property because
     // we do not want to evaluate the getters in this time.
-    gettersProxy[localType] = store.getters[type]
+    gettersProxy[localType] = store.getters[type]// 这里会再次调用_wrappedGetters
   })
 
   return gettersProxy
@@ -353,7 +357,7 @@ function registerAction (store, type, handler, local) {
     let res = handler({
       dispatch: local.dispatch,
       commit: local.commit,
-      getters: local.getters,
+      getters: local.getters(),
       state: local.getState(),
       rootGetters: store.getters,
       rootState: store.getState()
@@ -376,7 +380,7 @@ function registerGetter (store, type, rawGetter, local) {
     // 为原getters传入对应状态
     return rawGetter(
       local.getState(), // local state
-      local.getters, // local getters
+      local.getters(), // local getters
       store.getState(), // root state
       store.getters // root getters
     )

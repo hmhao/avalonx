@@ -2,15 +2,15 @@ export const mapState = normalizeNamespace((namespace, states) => {
   const res = {}
   normalizeMap(states).forEach(({ key, val }) => {
     res[key] = function mappedState () {
-      let state = this.$store.state
-      let getters = this.$store.getters
+      let state = avalon.store.state
+      let getters = avalon.store.getters
       if (namespace) {
-        const module = getModuleByNamespace(this.$store, 'mapState', namespace)
+        const module = getModuleByNamespace(avalon.store, 'mapState', namespace)
         if (!module) {
           return
         }
-        state = module.context.state
-        getters = module.context.getters
+        state = module.context.getState()
+        getters = module.context.getters()
       }
       return typeof val === 'function'
         ? val.call(this, state, getters)
@@ -25,10 +25,10 @@ export const mapMutations = normalizeNamespace((namespace, mutations) => {
   normalizeMap(mutations).forEach(({ key, val }) => {
     val = namespace + val
     res[key] = function mappedMutation (...args) {
-      if (namespace && !getModuleByNamespace(this.$store, 'mapMutations', namespace)) {
+      if (namespace && !getModuleByNamespace(avalon.store, 'mapMutations', namespace)) {
         return
       }
-      return this.$store.commit.apply(this.$store, [val].concat(args))
+      return avalon.store.commit.apply(avalon.store, [val].concat(args))
     }
   })
   return res
@@ -39,14 +39,14 @@ export const mapGetters = normalizeNamespace((namespace, getters) => {
   normalizeMap(getters).forEach(({ key, val }) => {
     val = namespace + val
     res[key] = function mappedGetter () {
-      if (namespace && !getModuleByNamespace(this.$store, 'mapGetters', namespace)) {
+      if (namespace && !getModuleByNamespace(avalon.store, 'mapGetters', namespace)) {
         return
       }
-      if (!(val in this.$store.getters)) {
+      if (!(val in avalon.store.getters)) {
         console.error(`[avalonx] unknown getter: ${val}`)
         return
       }
-      return this.$store.getters[val]
+      return avalon.store.getters[val]
     }
   })
   return res
@@ -57,10 +57,10 @@ export const mapActions = normalizeNamespace((namespace, actions) => {
   normalizeMap(actions).forEach(({ key, val }) => {
     val = namespace + val
     res[key] = function mappedAction (...args) {
-      if (namespace && !getModuleByNamespace(this.$store, 'mapActions', namespace)) {
+      if (namespace && !getModuleByNamespace(avalon.store, 'mapActions', namespace)) {
         return
       }
-      return this.$store.dispatch.apply(this.$store, [val].concat(args))
+      return avalon.store.dispatch.apply(avalon.store, [val].concat(args))
     }
   })
   return res
