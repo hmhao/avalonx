@@ -13,7 +13,7 @@ describe('Helpers', () => {
       computed: mapState(['a'])
     })
     expect(vm.a).toBe(1)
-    store.getState().a++
+    store.state.a++
     expect(vm.a).toBe(2)
   })
 
@@ -53,7 +53,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       computed: mapState('foo', {
         a: (state, getters) => {
           return state.a + getters.b
@@ -86,7 +85,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       computed: mapState('foo', {
         value: state => state
       })
@@ -106,7 +104,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapMutations(['inc', 'dec'])
     })
     vm.inc()
@@ -125,7 +122,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapMutations({
         plus: 'inc',
         minus: 'dec'
@@ -152,7 +148,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapMutations('foo', {
         plus: 'inc',
         minus: 'dec'
@@ -178,7 +173,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       computed: mapGetters(['hasAny', 'negative'])
     })
     expect(vm.hasAny).toBe(false)
@@ -206,7 +200,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       computed: mapGetters({
         a: 'hasAny',
         b: 'negative'
@@ -242,7 +235,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       computed: mapGetters('foo', {
         a: 'hasAny',
         b: 'negative'
@@ -270,7 +262,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapActions(['a', 'b'])
     })
     vm.a()
@@ -291,7 +282,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapActions({
         foo: 'a',
         bar: 'b'
@@ -320,7 +310,6 @@ describe('Helpers', () => {
     })
     const vm = avalon.define({
       $id: avalon.makeHashCode(),
-      store,
       methods: mapActions('foo/', {
         foo: 'a',
         bar: 'b'
