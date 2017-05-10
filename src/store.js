@@ -7,8 +7,7 @@ export class Store {
     assert(typeof Promise !== 'undefined', `avalonx requires a Promise polyfill in this browser.`)
 
     const {
-      plugins = [],
-      strict = false
+      plugins = []
     } = options
 
     let {
@@ -26,9 +25,7 @@ export class Store {
     this._modules = new ModuleCollection(options) // 支持store分模块传入，存储分析后的modules
     this._modulesNamespaceMap = Object.create(null) // 模块命名空间map
     this._subscribers = [] // 订阅函数集合，Store提供了subscribe功能
-    this._watcherVM = avalon.define({ // 组件用于watch监视变化
-      $id: avalon.makeHashCode('sw')
-    })
+    this._watchers = [] // 用于watch组件变化
 
     // bind commit and dispatch to self
     const store = this
@@ -39,9 +36,6 @@ export class Store {
     this.commit = function boundCommit (type, payload, options) {
       return commit.call(store, type, payload, options)
     }
-
-    // strict mode
-    this.strict = strict
 
     // avalonx 的初始化核心
     // init root module.
@@ -58,6 +52,9 @@ export class Store {
     store.mapMutations = mapMutations
     store.mapActions = mapActions
     avalon.store = store
+
+    // apply plugins
+    plugins.forEach(plugin => plugin(this))
   }
 
   getState () {
@@ -116,9 +113,50 @@ export class Store {
     }
   }
 
-  watch (getter, cb, options) {
-    assert(typeof getter === 'function', `store.watch only accepts a function.`)
-    return this._watcherVM.$watch(() => getter(this.state, this.getters), cb, options)
+  watch (getter, cb) {
+    assert(typeof getter === 'string', `store.watch only accepts a string.`)
+    assert(!/^\s*$/.test(getter), `store.watch only accepts a non-empty string.`)
+    let expr = '_data.state.' + getter
+    let w = this._vm.$watch(expr, cb)
+    w.expr = expr
+    w.cb = cb
+    this._watchers.push(w)
+    return () => {
+      let index = this._watchers.indexOf(w)
+      if (index != -1) {
+        let uw = this._watchers.splice(index, 1)[0]
+        delete uw.expr
+        delete uw.cb
+        uw()
+      }
+    }
+  }
+
+  unwatch (getter, cb) {
+    let uw
+    if (getter) {
+      assert(typeof getter === 'string', `store.watch only accepts a string.`)
+      assert(!/^\s*$/.test(getter), `store.watch only accepts a non-empty string.`)
+      let expr = '_data.state.' + getter
+      for (let i = 0; i < this._watchers.length; ) {
+        uw = this.watchers[i]
+        if(uw.expr === expr && (!cb || cb === uw.cb)){
+          this._watchers.splice(i, 1)
+          delete uw.expr
+          delete uw.cb
+          uw()
+        }else{
+          i++
+        }
+      }
+    } else {
+      while (this._watchers.length) {
+        uw = this._watchers.pop()
+        delete uw.expr
+        delete uw.cb
+        uw()
+      }
+    }
   }
 
   replaceState (state) {
@@ -133,9 +171,10 @@ export class Store {
     if (typeof path === 'string') path = [path]
     assert(Array.isArray(path), `module path must be a string or an Array.`)
     this._modules.register(path, rawModule)
-    installModule(this, this.state, path, this._modules.get(path))
+    let state = this.state.$model
+    installModule(this, state, path, this._modules.get(path))
     // reset store to update getters...
-    resetStoreVM(this, this.state)
+    resetStoreVM(this, state)
   }
 
   unregisterModule (path) {
@@ -144,7 +183,12 @@ export class Store {
     this._modules.unregister(path)
     this._withCommit(() => {
       const parentState = getNestedState(this.state, path.slice(0, -1))
-      //Vue.delete(parentState, path[path.length - 1])
+      const moduleName = path[path.length - 1]
+      try{
+        delete parentState[moduleName]
+      }catch(e){
+        parentState[moduleName] = null
+      }
     })
     resetStore(this)
   }
@@ -177,6 +221,15 @@ function resetStore (store, hot) {
 function resetStoreVM (store, state, hot) {
   const oldVm = store._vm // 缓存前vm组件
 
+  const newWatchers = []
+  store._watchers.forEach((w) => {
+    newWatchers.push({
+      expr: w.expr.replace('_data.state.', ''),
+      cb: w.cb
+    })
+  })
+  store.unwatch()
+
   const wrappedGetters = store._wrappedGetters
   const computed = {}
   // 循环所有处理过的getters，并新建computed对象进行存储
@@ -200,10 +253,9 @@ function resetStoreVM (store, state, hot) {
   })
   store.state = store._vm._data.state
 
-  // enable strict mode for new vm
-  if (store.strict) {
-    enableStrictMode(store)
-  }
+  newWatchers.forEach((w) => {
+    store.watch(w.expr, w.cb)
+  })
 
   if (oldVm) {
     if (hot) {
@@ -312,31 +364,38 @@ function makeLocalContext (store, namespace, path) {
   return local
 }
 
+const gettersCache = {}
 function makeLocalGetters (store, namespace) {
   const gettersProxy = {}
 
   const splitPos = namespace.length
 
-  if(!store._gettersTypes){
-    store._gettersTypes = Object.keys(store._wrappedGetters)
-  }
-  while(store._gettersTypes && store._gettersTypes.length){
-    let type = store._gettersTypes.pop()
-    // skip if the target getter is not match this namespace
-    if (type.slice(0, splitPos) !== namespace) return
+  const gettersKeys = Object.keys(store._wrappedGetters)
+  if (gettersKeys.length) {
+    const gettersUUID = store._vm.$id + ':' + gettersKeys.join(':')
+    if (!gettersCache[gettersUUID]) {
+      const computed = {}
+      gettersKeys.forEach(type => {
+        // skip if the target getter is not match this namespace
+        if (type.slice(0, splitPos) !== namespace) return
 
-    // extract local getter type
-    const localType = type.slice(splitPos)
+        // extract local getter type
+        const localType = type.slice(splitPos)
 
-    // Add a port to the getters proxy.
-    // Define as getter property because
-    // we do not want to evaluate the getters in this time.
-    gettersProxy[localType] = store._wrappedGetters[type](store, true)// 这里会再次调用_wrappedGetters,防止递归
+        // Add a port to the getters proxy.
+        // Define as getter property because
+        // we do not want to evaluate the getters in this time.
+        computed[localType] = () => store._wrappedGetters[type](store)
+      })
+      gettersCache[gettersUUID] = avalon.define({
+        $id: avalon.makeHashCode('localgetters'),
+        $computed: computed
+      })
+    }
+    return gettersCache[gettersUUID]
+  } else {
+    return {}
   }
-  if(store._gettersTypes && !store._gettersTypes.length){
-    delete store._gettersTypes
-  }
-  return gettersProxy
 }
 
 function registerMutation (store, type, handler, local) {
@@ -379,17 +438,11 @@ function registerGetter (store, type, rawGetter, local) {
     // 为原getters传入对应状态
     return rawGetter(
       local.getState(), // local state
-      isLocal ? {} : local.getters(), // local getters
+      local.getters(), // local getters
       store.getState(), // root state
       store.getters // root getters
     )
   }
-}
-
-function enableStrictMode (store) {
-  store._vm.$watch(this.getState(), () => {
-    assert(store._committing, `Do not mutate avalonx store state outside mutation handlers.`)
-  }, { deep: true, sync: true })
 }
 
 function getNestedState (state, path) {
