@@ -1,7 +1,7 @@
 {
   "name": "avalonx",
   "version": "1.0.1",
-  "description": "state management for avalon.js",
+  "description": "state management for avalon2.js",
   "main": "dist/avalonx.js",
   "module": "dist/avalonx.esm.js",
   "unpkg": "dist/avalonx.js",
@@ -25,11 +25,13 @@
     "docs:deploy": "cd docs && ./deploy.sh"
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/hmhao/avalonx.git"
   },
   "author": "hmhao",
   "license": "MIT",
   "bugs": {
+    "url": "https://github.com/hmhao/avalonx/issues"
   },
   "devDependencies": {
     "avalon2": "^2.2.4",
