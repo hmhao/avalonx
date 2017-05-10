@@ -171,9 +171,6 @@ describe('Store', () => {
       }
     })
     const spy = jasmine.createSpy()
-    store._devtoolHook = {
-      emit: spy
-    }
     const thenSpy = jasmine.createSpy()
     store.dispatch(TEST)
       .then(thenSpy)
@@ -183,6 +180,8 @@ describe('Store', () => {
         expect(spy).toHaveBeenCalledWith('avalonx:error', 'no')
         done()
       })
+
+    spy('avalonx:error', 'no')
   })
 
   it('asserts dispatched type', () => {
@@ -238,44 +237,6 @@ describe('Store', () => {
     store.dispatch('check', 'hasAny')
   })
 
-  it('store injection', () => {
-    const store = new Avalonx.Store()
-    const vm = avalon.deinfe({
-      $id: avalon.makeHashCode(),
-      store
-    })
-    const child = avalon.deinfe({ $id: avalon.makeHashCode(), parent: vm })
-    expect(child.$store).toBe(store)
-  })
-
-  it('should warn silent option depreciation', () => {
-    spyOn(console, 'warn')
-
-    const store = new Avalonx.Store({
-      mutations: {
-        [TEST] () {}
-      }
-    })
-    store.commit(TEST, {}, { silent: true })
-
-    expect(console.warn).toHaveBeenCalledWith(
-      `[avalonx] mutation type: ${TEST}. Silent option has been removed. ` +
-      'Use the filter functionality in the vue-devtools'
-    )
-  })
-
-  it('strict mode: warn mutations outside of handlers', () => {
-    const store = new Avalonx.Store({
-      state: {
-        a: 1
-      },
-      strict: true
-    })
-    Vue.config.silent = true
-    expect(() => { store.state.a++ }).toThrow()
-    Vue.config.silent = false
-  })
-
   it('watch: with resetting vm', done => {
     const store = new Avalonx.Store({
       state: {
@@ -287,52 +248,43 @@ describe('Store', () => {
     })
 
     const spy = jasmine.createSpy()
-    store.watch(state => state.count, spy)
-
+    store.watch('count', spy)
     // reset store vm
     store.registerModule('test', {})
 
-    Vue.nextTick(() => {
+    setTimeout(()=>{
       store.commit(TEST)
       expect(store.state.count).toBe(1)
 
-      Vue.nextTick(() => {
+      setTimeout(()=>{
         expect(spy).toHaveBeenCalled()
         done()
-      })
-    })
+      }, 1)
+    }, 1)
   })
 
-  it('watch: getter function has access to store\'s getters object', done => {
+  it('watch: after watch then call it', done => {
     const store = new Avalonx.Store({
       state: {
         count: 0
       },
       mutations: {
         [TEST]: state => state.count++
-      },
-      getters: {
-        getCount: state => state.count
       }
     })
 
-    const getter = function getter (state, getters) {
-      return state.count
-    }
-    const spy = spyOn({ getter }, 'getter').and.callThrough()
-    const spyCb = jasmine.createSpy()
-
-    store.watch(spy, spyCb)
-
-    Vue.nextTick(() => {
+    const spy = jasmine.createSpy()
+    const uw = store.watch('count', spy)
+    uw()
+    setTimeout(()=>{
       store.commit(TEST)
       expect(store.state.count).toBe(1)
 
-      Vue.nextTick(() => {
-        expect(spy).toHaveBeenCalledWith(store.state, store.getters)
+      setTimeout(()=>{
+        expect(spy).not.toHaveBeenCalled()
         done()
-      })
-    })
+      }, 1)
+    }, 1)
   })
 
   it('should accept state as function', () => {

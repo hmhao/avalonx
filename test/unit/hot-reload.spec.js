@@ -251,14 +251,13 @@ describe('Hot Reload', () => {
     })
 
     const spy = jasmine.createSpy()
-    const vm = new Vue({
+    const vm = avalon.define({
+      $id: avalon.makeHashCode(),
       computed: {
         a: () => store.getters.count
-      },
-      watch: {
-        a: spy
       }
     })
+    vm.$watch('a', spy)
 
     expect(vm.a).toBe(0)
     store.dispatch('check', 0)
@@ -278,10 +277,10 @@ describe('Hot Reload', () => {
     expect(vm.a).toBe(10)
     store.dispatch('check', 10)
 
-    Vue.nextTick(() => {
+    setTimeout(()=>{
       expect(spy).toHaveBeenCalled()
       done()
-    })
+    }, 1)
   })
 
   it('provide warning if a new module is given', () => {

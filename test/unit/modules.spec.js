@@ -7,7 +7,6 @@ describe('Modules', () => {
   describe('module registration', () => {
     it('dynamic module registration', () => {
       const store = new Avalonx.Store({
-        strict: true,
         modules: {
           foo: {
             state: { bar: 1 },
@@ -94,14 +93,14 @@ describe('Modules', () => {
       }
     })
 
-    store.watch(state => state.a, spy)
+    store.watch('a', spy)
     store.registerModule(['b', 'c'], {
       state: { value: 2 }
     })
-    Vue.nextTick(() => {
+    setTimeout(()=>{
       expect(spy).not.toHaveBeenCalled()
       done()
-    })
+    }, 1)
   })
 
   describe('modules usage', () => {

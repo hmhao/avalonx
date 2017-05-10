@@ -17,13 +17,13 @@ describe('Module', () => {
 
   it('get namespacer: no namespace option', () => {
     const module = new Module({})
-    expect(module.namespaced).toBe(false)
+    expect(module.getNamespaced()).toBe(false)
   })
 
   it('get namespacer: namespace option is true', () => {
     const module = new Module({
       namespaced: true
     })
-    expect(module.namespaced).toBe(true)
+    expect(module.getNamespaced()).toBe(true)
   })
 })
