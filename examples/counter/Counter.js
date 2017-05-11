@@ -11,6 +11,7 @@ let template = `
 import { mapGetters, mapActions } from 'avalonx'
 
 export default {
+  name: 'counter',
   template,
   computed: mapGetters([
     'evenOrOdd'
