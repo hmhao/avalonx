@@ -60,7 +60,6 @@
     "rollup-plugin-replace": "^1.1.1",
     "rollup-watch": "^3.2.2",
     "selenium-server": "^2.53.1",
-    "todomvc-app-css": "^2.0.6",
     "uglify-js": "^2.7.5",
     "webpack": "^2.2.1",
     "webpack-dev-middleware": "^1.10.0",
