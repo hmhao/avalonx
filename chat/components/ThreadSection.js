@@ -28,7 +28,11 @@ export default {
     ]),
     unreadCount () {
       const threads = this.threads
-      return Object.keys(threads).reduce((count, id) => {
+      let arr = Object.keys(threads)
+      if(avalon.msie < 9){
+        arr = arr.filter(key => !/^\$\w+$|hasOwnProperty/.test(key))
+      }
+      return arr.reduce((count, id) => {
         return threads[id].lastMessage.isRead
           ? count
           : count + 1
