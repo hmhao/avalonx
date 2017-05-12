@@ -2,10 +2,25 @@
 
 > Centralized State Management for Avalon2.js.
 
-基于Vuex修改适应avalon2
+基于[Vuex](https://github.com/vuejs/vuex)修改适应[avalon2](https://github.com/RubyLouvre/avalon)
 
 - [What is Vuex?](http://vuex.vuejs.org/en/intro.html)
 - [Full Documentation](http://vuex.vuejs.org/)
+
+## Examples
+
+- [Counter](https://github.com/hmhao/avalonx/tree/master/examples/counter)
+- [Counter with Hot Reload](https://github.com/hmhao/avalonx/tree/master/examples/counter-hot)
+- [Shopping Cart](https://github.com/hmhao/avalonx/tree/master/examples/shopping-cart)
+- [TodoMVC](https://github.com/hmhao/avalonx/tree/master/examples/todomvc)
+- [Flux Chat](https://github.com/hmhao/avalonx/tree/master/examples/chat)
+
+Running the examples:
+
+``` bash
+$ npm install
+$ npm run dev # serve examples at localhost:8080
+```
 
 部分API调整
 
