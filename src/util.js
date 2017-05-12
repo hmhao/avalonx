@@ -40,6 +40,7 @@ export function deepCopy (obj, cache = []) {
   })
 
   Object.keys(obj).forEach(key => {
+    if(avalon.msie < 9 && /^\$\w+$/.test(key)) return
     copy[key] = deepCopy(obj[key], cache)
   })
 
@@ -50,7 +51,7 @@ export function deepCopy (obj, cache = []) {
  * forEach for object
  */
 export function forEachValue (obj, fn) {
-  Object.keys(obj).forEach(key => fn(obj[key], key))
+  Object.keys(obj).forEach(key => key !== '__esModule' && fn(obj[key], key))
 }
 
 export function isObject (obj) {

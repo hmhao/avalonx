@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 const webpack = require('webpack')
+const es3ifyPlugin = require('es3ify-webpack-plugin')
+const ReplacePlugin = require('replace-bundle-webpack-plugin')
 
 module.exports = {
 
@@ -31,11 +33,38 @@ module.exports = {
 
   resolve: {
     alias: {
-      avalonx: path.resolve(__dirname, '../src/index.esm.js')
+      avalonx: path.resolve(__dirname, '../dist/avalonx.esm.js')
     }
   },
 
   plugins: [
+    new es3ifyPlugin(),
+    new ReplacePlugin([{
+      partten: /Object\.defineProperty\((__webpack_exports__|exports),\s*"__esModule",\s*\{\s*value:\s*true\s*\}\);/g,
+      replacement: function (str, p1) {
+        return p1 + '.__esModule = true;';
+      }
+    },{
+      partten: /\/\**\/\s*Object\.defineProperty\(exports,\s*name,\s*\{[^})]*\}\);/g,
+      replacement: function () {
+        return '/******/            exports[name] = getter;';
+      }
+    },{
+      partten: /,\s*hotCreateRequire\(moduleId\)/g,
+      replacement: function () {
+        return ', (this.noHotCreateRequire ? __webpack_require__ : hotCreateRequire(moduleId))'
+      }
+    },{
+      partten: /return\s*?(hotCreateRequire\(\d+\)\((.*)\))/g,
+      replacement: function (str, p1, p2) {
+        return `return this.noHotCreateRequire ? __webpack_require__(${p2}) : ${p1}`
+      }
+    },{
+      partten: /\(function\(module\)\s*{\/\*eslint-env browser\*\//g,
+      replacement: function (str) {
+        return '\nif (window.noHotCreateRequire) { return }\n' + str
+      }
+    }]),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'shared',
       filename: 'shared.js'
