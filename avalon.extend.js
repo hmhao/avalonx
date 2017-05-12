@@ -1,5 +1,7 @@
-import 'babel-polyfill'
+import promise from 'es6-promise'
 import avalon from 'avalon2'
+
+promise.polyfill()
 
 avalon.config({
   debug: true

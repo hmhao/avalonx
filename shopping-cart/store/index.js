@@ -14,6 +14,5 @@ export default new Avalonx.Store({
     cart,
     products
   },
-  strict: debug,
   plugins: debug ? [createLogger()] : []
 })

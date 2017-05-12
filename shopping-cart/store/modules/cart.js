@@ -5,7 +5,8 @@ import * as types from '../mutation-types'
 // shape: [{ id, quantity }]
 const state = {
   added: [],
-  checkoutStatus: ''
+  checkoutStatus: '',
+  lastCheckout: ''
 }
 
 // getters
@@ -29,7 +30,7 @@ const actions = {
 // mutations
 const mutations = {
   [types.ADD_TO_CART] (state, { id }) {
-    state.lastCheckout = null
+    state.lastCheckout = ''
     const record = state.added.find(p => p.id === id)
     if (!record) {
       state.added.push({
