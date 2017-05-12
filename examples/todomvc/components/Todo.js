@@ -6,7 +6,7 @@ let template = `
       <input class="toggle"
         type="checkbox"
         :attr="{checked:todo.done}"
-        :change="toggleTodo({ todo: todo })">
+        :click="toggleTodo({ todo: todo })">
       <label :dblclick="editing = true">{{todo.text}}</label>
     </div>
     <input class="edit"

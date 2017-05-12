@@ -1,26 +1,26 @@
 let template = `
-  <section class="todoapp">
+  <div class="todoapp">
     <!-- header -->
-    <header class="header">
+    <div class="header">
       <h1>todos</h1>
       <input class="new-todo"
         autofocus
         autocomplete="off"
         placeholder="What needs to be done?"
         :keyup="addTodo | enter">
-    </header>
+    </div>
     <!-- main section -->
-    <section class="main" :visible="todos.length">
+    <div class="main" :visible="todos.length">
       <input class="toggle-all"
         type="checkbox"
-        :attr="{checked:allChecked}"
-        :change="toggleAll({ done: !allChecked })">
+        :attr="{checked:allChecked}">
+      <label :click="toggleAll({ done: !allChecked })"></label>
       <ul class="todo-list">
         <todo :for="(index, todo) in filteredTodos" :widget="{is: 'todo', key:index, todo: todo}"></todo>
       </ul>
-    </section>
+    </div>
     <!-- footer -->
-    <footer class="footer" :visible="todos.length">
+    <div class="footer" :visible="todos.length">
       <span class="todo-count">
         <strong>{{ remaining }}</strong>
         {{ remaining | pluralize('item') }} left
@@ -37,8 +37,8 @@ let template = `
         :click="clearCompleted">
         Clear completed
       </button>
-    </footer>
-  </section>
+    </div>
+  </div>
 `
 
 import { mapMutations } from 'avalonx'
