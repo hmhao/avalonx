@@ -287,6 +287,84 @@ describe('Store', () => {
     }, 1)
   })
 
+  it('watch: with modules', done => {
+    const store = new Avalonx.Store({
+      modules: {
+        foo: {
+          state: { count: 0 },
+          mutations: {
+            'test1': state => state.count++
+          },
+          modules: {
+            bar: {
+              state: { count: 1 },
+              mutations: {
+                'test2': state => state.count++
+              }
+            }
+          }
+        }
+      }
+    })
+
+    const spy1 = jasmine.createSpy()
+    store.watch('foo.count', spy1)
+
+    const spy2 = jasmine.createSpy()
+    store.watch('foo.bar.count', spy2)
+
+    setTimeout(()=>{
+      store.commit('test1')
+      expect(store.state.foo.count).toBe(1)
+      expect(spy1).toHaveBeenCalled()
+      setTimeout(()=>{
+        store.commit('test2')
+        expect(store.state.foo.bar.count).toBe(2)
+        expect(spy2).toHaveBeenCalled()
+        done()
+      }, 1)
+    }, 1)
+  })
+
+  it('watch: with namespace and a nested module', done => {
+    const store = new Avalonx.Store({
+      modules: {
+        foo: {
+          namespaced: true,
+          state: { count: 1 },
+          mutations: {
+            'test1': state => state.count--
+          },
+          modules: {
+            bar: {
+              state: { count: 2 },
+              mutations: {
+                'test2': state => state.count--
+              }
+            }
+          }
+        }
+      }
+    })
+    const spy1 = jasmine.createSpy()
+    store.watch('foo.count', spy1)
+
+    const spy2 = jasmine.createSpy()
+    store.watch('foo.bar.count', spy2)
+
+    setTimeout(()=>{
+      store.commit('foo/test1')
+      expect(store.state.foo.count).toBe(0)
+      expect(spy1).toHaveBeenCalled()
+      setTimeout(()=>{
+        store.commit('foo/test2')
+        expect(store.state.foo.bar.count).toBe(1)
+        expect(spy2).toHaveBeenCalled()
+        done()
+      }, 1)
+    }, 1)
+  })
+
   it('should accept state as function', () => {
     const store = new Avalonx.Store({
       state: () => ({
