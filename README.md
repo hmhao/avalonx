@@ -1,4 +1,4 @@
-# Avalonx
+# Avalonx [![Build Status](https://circleci.com/gh/hmhao/avalonx/tree/master.png?style=shield)](https://circleci.com/gh/hmhao/avalonx)
 
 > Centralized State Management for Avalon2.js.
 
