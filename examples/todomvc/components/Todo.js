@@ -12,8 +12,8 @@ let template = `
     <input class="edit"
       :visible="editing"
       :attr="{value: todo.text}"
-      :keyup="doneEdit | enter"
-      :keyup="cancelEdit | esc"
+      :keyup-0="doneEdit | enter"
+      :keyup-1="cancelEdit | esc"
       :blur="doneEdit">
   </li>
 `

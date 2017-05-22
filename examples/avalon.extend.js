@@ -139,4 +139,24 @@ avalon.bootstrap = function(options) {
   avalon.innerHTML(root, template)
 }
 
+var keys = {
+  esc: 27,
+  tab: 9,
+  enter: 13,
+  space: 32,
+  del: 46,
+  up: 38,
+  left: 37,
+  right: 39,
+  down: 40
+};
+for (var name$1 in keys) {
+  (function (filter, key) {
+    avalon.filters[filter] = function (e) {
+      e.$return = e.which !== key;
+      return e;
+    };
+  })(name$1, keys[name$1]);
+}
+
 export default avalon

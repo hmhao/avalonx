@@ -18,7 +18,7 @@ export const mutations = {
   },
 
   deleteTodo (state, { todo }) {
-    state.todos.splice(state.todos.indexOf(todo), 1)
+    state.todos.removeAt(state.todos.indexOf(todo))
   },
 
   toggleTodo (state, { todo }) {

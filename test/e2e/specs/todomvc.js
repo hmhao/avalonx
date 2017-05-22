@@ -107,7 +107,7 @@ module.exports = {
       .assert.focused('.todo:nth-child(1) .edit')
       .clearValue('.todo:nth-child(1) .edit')
       .setValue('.todo:nth-child(1) .edit', 'edited!')
-      .click('footer') // blur
+      .click('.footer') // blur
       .assert.count('.todo.editing', 0)
       .assert.containsText('.todo:nth-child(1) label', 'edited!')
 
@@ -135,9 +135,9 @@ module.exports = {
 
     // toggle all
     browser
-      .click('.toggle-all')
+      .click('.toggle-all + label')
       .assert.count('.todo.completed', 3)
-      .click('.toggle-all')
+      .click('.toggle-all + label')
       .assert.count('.todo:not(.completed)', 3)
       .end()
 
