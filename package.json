@@ -16,6 +16,7 @@
     "build:main": "rollup -c build/rollup.config.js && uglifyjs dist/avalonx.js -cm --comments -o dist/avalonx.min.js",
     "build:esm": "rollup -c build/rollup.config.js --environment ESM",
     "build:logger": "rollup -c build/rollup.logger.config.js",
+    "build:examples": "npm run build:esm && node examples/build.js",
     "lint": "eslint src test",
     "test": "npm run lint && npm run test:unit && npm run test:e2e",
     "test:unit": "rollup -c build/rollup.config.js && jasmine JASMINE_CONFIG_PATH=test/unit/jasmine.json",
