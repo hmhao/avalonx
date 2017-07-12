@@ -7,13 +7,13 @@
 - [What is Vuex?](http://vuex.vuejs.org/en/intro.html)
 - [Full Documentation](http://vuex.vuejs.org/)
 
-## Examples
+## [Online Examples](https://hmhao.github.io/avalonx/)
 
-- [Counter](https://github.com/hmhao/avalonx/tree/master/examples/counter)
-- [Counter with Hot Reload](https://github.com/hmhao/avalonx/tree/master/examples/counter-hot)
-- [Shopping Cart](https://github.com/hmhao/avalonx/tree/master/examples/shopping-cart)
-- [TodoMVC](https://github.com/hmhao/avalonx/tree/master/examples/todomvc)
-- [Flux Chat](https://github.com/hmhao/avalonx/tree/master/examples/chat)
+- [Counter](https://hmhao.github.io/avalonx/counter/)
+- [Counter with Hot Reload](https://hmhao.github.io/avalonx/counter-hot/)
+- [Shopping Cart](https://hmhao.github.io/avalonx/shopping-cart/)
+- [TodoMVC](https://hmhao.github.io/avalonx/todomvc/)
+- [Flux Chat](https://hmhao.github.io/avalonx/chat/)
 
 Running the examples:
 

@@ -8,7 +8,7 @@ const app = express()
 const compiler = webpack(WebpackConfig)
 
 app.use(webpackDevMiddleware(compiler, {
-  publicPath: '/__build__/',
+  publicPath: '/dist/',
   stats: {
     colors: true,
     chunks: false
